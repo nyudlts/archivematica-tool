@@ -72,6 +72,8 @@ func transferPackage(packageName string) {
 		panic(err)
 	}
 
+	fmt.Println(startTransferResponse.Message)
+
 	uuid, err := startTransferResponse.GetUUID()
 	if err != nil {
 		panic(err)
@@ -139,7 +141,8 @@ func transferPackage(packageName string) {
 	if err != nil {
 		panic(err)
 	}
-	writer.WriteString(aipDir)
+	fmt.Println(aipDir)
+	writer.WriteString(fmt.Sprintf("%s\n", aipDir))
 	writer.Flush()
 }
 
