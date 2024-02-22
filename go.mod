@@ -3,7 +3,7 @@ module github.com/nyudlts/am-tool
 go 1.21.4
 
 require (
-	github.com/nyudlts/go-archivematica v0.0.0-20231204154810-65303ba6287e
+	github.com/nyudlts/go-archivematica v0.0.0-20240222155624-9d79d04f8b90
 	github.com/spf13/cobra v1.8.0
 )
 
