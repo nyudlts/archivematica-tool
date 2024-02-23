@@ -1,14 +1,31 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 
+	"github.com/google/uuid"
 	amatica "github.com/nyudlts/go-archivematica"
 	"github.com/spf13/cobra"
 )
 
+var (
+	packageType   string
+	packageStatus string
+	packagePath   string
+	typePtr       *string
+	statusPtr     *string
+	pathPtr       *string
+	test          bool
+)
+
 func init() {
 	removeCmd.Flags().StringVar(&config, "config", "", "")
+	removeCmd.Flags().StringVar(&packageType, "type", "", "")
+	removeCmd.Flags().StringVar(&packageStatus, "status", "", "")
+	removeCmd.Flags().StringVar(&packagePath, "path", "", "")
+	removeCmd.Flags().BoolVar(&test, "test", false, "")
 	rootCmd.AddCommand(removeCmd)
 }
 
@@ -21,79 +38,77 @@ var removeCmd = &cobra.Command{
 			panic(err)
 		}
 
-		dips, err := client.GetPackageType("DIP")
+		setPointers()
+
+		packs, err := client.FilterPackages(typePtr, statusPtr, pathPtr)
 		if err != nil {
 			panic(err)
 		}
 
-		for i, dip := range dips {
-			dJson, err := dip.MarshalPack()
-			if err != nil {
+		for _, pack := range packs {
+			pathSplit := strings.Split(pack.CurrentPath, "/")
+			fmt.Println("requesting deletion of:", pathSplit[len(pathSplit)-1])
+			if err := requestDeletion(pack.UUID); err != nil {
 				panic(err)
 			}
-			fmt.Println(i, dJson)
 		}
 	},
 }
 
-/*
+func setPointers() {
+	if packageType == "" {
+		typePtr = nil
+	} else {
+		typePtr = &packageType
+	}
 
-	uploaded := []uuid.UUID{}
-	packages, err := client.GetPackages(nil)
+	if packageStatus == "" {
+		statusPtr = nil
+	} else {
+		statusPtr = &packageStatus
+	}
+
+	if packagePath == "" {
+		pathPtr = nil
+	} else {
+		pathPtr = &packagePath
+	}
+}
+
+func requestDeletion(packageUUID uuid.UUID) error {
+
+	fmt.Printf("Requesting deletion for `%s`\n", packageUUID)
+
+	pack, err := client.GetPackage(packageUUID)
 	if err != nil {
-		panic(err)
-	}
-	complete := false
-
-	for !complete {
-		packages, err = client.GetPackages(&packages.Meta.Next)
-		if err != nil {
-			panic(err)
-		}
-
-		for _, pack := range packages.Objects {
-			if pack.PackageType == "AIP" && pack.Status == "UPLOADED" {
-				uploaded = append(uploaded, pack.UUID)
-			}
-		}
-
-		if packages.Meta.Next == "" {
-			complete = true
-		}
+		return err
 	}
 
-	for _, packageUUID := range uploaded {
-		fmt.Printf("Requesting deletion for `%s`\n", packageUUID)
+	dr := amatica.DeletionRequest{}
+	dr.EventReason = "Transferred to R*"
+	dr.UserEmail = client.SSUserEmail
+	dr.UserID = client.SSUserID
+	pipelineUUID, err := pack.GetPipelineUUID()
+	if err != nil {
+		return err
+	}
+	dr.Pipeline = pipelineUUID
 
-		pack, err := client.GetPackage(packageUUID)
-		if err != nil {
-			panic(err)
-		}
+	drBytes, err := json.Marshal(dr)
+	if err != nil {
+		return err
+	}
 
-		dr := amatica.DeletionRequest{}
-		dr.EventReason = "Transferred to R*"
-		dr.UserEmail = "don.mennerich@nyu.edu"
-		dr.UserID = "1"
-		pipelineUUID, err := pack.GetPipelineUUID()
-		if err != nil {
-			panic(err)
-		}
-		dr.Pipeline = pipelineUUID
-
-		drBytes, err := json.Marshal(dr)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Println(string(drBytes))
-
+	if !test {
 		msg, err := client.RequestPackageDeletion(pack.UUID, string(drBytes))
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		fmt.Println(msg)
-
-		time.Sleep(500 * time.Millisecond)
+	} else {
+		fmt.Println("Test mode, not requesting deletion")
+		fmt.Println(dr)
 	}
-*/
+	return nil
+}

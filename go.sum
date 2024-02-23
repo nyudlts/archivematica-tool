@@ -7,6 +7,12 @@ github.com/nyudlts/go-archivematica v0.0.0-20240221204201-5e4400b03c6e h1:C0+K8s
 github.com/nyudlts/go-archivematica v0.0.0-20240221204201-5e4400b03c6e/go.mod h1:44IvAwlfD2Xsti1p8DF+TEQC9UW9VbeltE7cug/eNdo=
 github.com/nyudlts/go-archivematica v0.0.0-20240222155624-9d79d04f8b90 h1:F7fCzEk8RWRjLHGWeAxFmeeov7KGHsEVNKi8J3qem48=
 github.com/nyudlts/go-archivematica v0.0.0-20240222155624-9d79d04f8b90/go.mod h1:44IvAwlfD2Xsti1p8DF+TEQC9UW9VbeltE7cug/eNdo=
+github.com/nyudlts/go-archivematica v0.0.0-20240222203926-c7b6b2a302be h1:b+sv30ZzmMwaWa3kUUjAOCaeca/BgMS80kLcdqg9UkE=
+github.com/nyudlts/go-archivematica v0.0.0-20240222203926-c7b6b2a302be/go.mod h1:44IvAwlfD2Xsti1p8DF+TEQC9UW9VbeltE7cug/eNdo=
+github.com/nyudlts/go-archivematica v0.0.0-20240223142026-ebf031b68084 h1:cMgcqn74JFfIeMljVkcVO+h+Yc+kNXaX17hltFCS3SU=
+github.com/nyudlts/go-archivematica v0.0.0-20240223142026-ebf031b68084/go.mod h1:44IvAwlfD2Xsti1p8DF+TEQC9UW9VbeltE7cug/eNdo=
+github.com/nyudlts/go-archivematica v0.0.0-20240223145731-4ebbefbc17b1 h1:iG9e0MpyoMSW/11NF8cgpyW7/gJrtgZHMl439KO08YU=
+github.com/nyudlts/go-archivematica v0.0.0-20240223145731-4ebbefbc17b1/go.mod h1:44IvAwlfD2Xsti1p8DF+TEQC9UW9VbeltE7cug/eNdo=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/spf13/cobra v1.8.0 h1:7aJaZx1B85qltLMc546zn58BxxfZdR/W22ej9CFoEf0=
 github.com/spf13/cobra v1.8.0/go.mod h1:WXLWApfZ71AjXPya3WOlMsY9yMs7YeiHhFVlvLyhcho=
