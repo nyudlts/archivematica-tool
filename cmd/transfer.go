@@ -57,6 +57,7 @@ var transferCmd = &cobra.Command{
 			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_") {
 				xferPath := filepath.Join(directoryName, xferDir.Name())
 				xipPath := strings.ReplaceAll(xferPath, client.StagingLoc, "")
+				fmt.Println(xipPath)
 
 				if err := transferPackage(xipPath); err != nil {
 					panic(err)
@@ -83,6 +84,8 @@ func transferPackage(xipPath string) error {
 		amXIPPath = strings.Replace(amXIPPath, "\\", "/", -1)
 	}
 
+	fmt.Println(amXIPPath)
+
 	//request to transfer the xip
 	startTransferResponse, err := client.StartTransfer(location.UUID, amXIPPath)
 	if err != nil {
@@ -102,10 +105,10 @@ func transferPackage(xipPath string) error {
 		panic(err)
 	}
 
-	fmt.Printf("transfer started: %v %s", uuid, filepath.Base(amXIPPath))
+	fmt.Printf("transfer started: %v %s\n", uuid, filepath.Base(amXIPPath))
 
+	//change this logic over to a channel
 	foundUnapproved := false
-
 	for !foundUnapproved {
 		foundUnapproved = findUnapprovedTransfer(uuid)
 		if !foundUnapproved {
@@ -115,7 +118,6 @@ func transferPackage(xipPath string) error {
 	}
 
 	//approve the transfer
-
 	transfer, err := client.GetTransferStatus(uuid)
 	if err != nil {
 		return err
@@ -162,12 +164,19 @@ func transferPackage(xipPath string) error {
 	}
 
 	fmt.Println("Ingest Completed:", sipUUID)
-	aipDir, err := client.GetAIPLocation(sipUUID)
+	aipPath, err := amatica.ConvertUUIDToAMDirectory(sipUUID)
 	if err != nil {
 		return err
 	}
-	fmt.Println(aipDir)
-	writer.WriteString(fmt.Sprintf("%s\n", aipDir))
+
+	aipPath = filepath.Join(aipPath, filepath.Base(xipPath))
+	if windows {
+		aipPath = strings.Replace(aipPath, "\\", "/", -1)
+	}
+
+	aipPath = fmt.Sprintf("%s%s", "/", aipPath)
+
+	writer.WriteString(fmt.Sprintf("%s\n", aipPath))
 	writer.Flush()
 
 	return nil
