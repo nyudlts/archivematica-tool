@@ -21,7 +21,7 @@ const locationName = "amatica rws ingest point"
 
 func init() {
 	transferCmd.Flags().StringVar(&config, "config", "", "")
-	transferCmd.Flags().StringVar(&directoryName, "directory-name", "", "")
+	transferCmd.Flags().StringVar(&directoryName, "path", "", "")
 	rootCmd.AddCommand(transferCmd)
 }
 
@@ -51,8 +51,8 @@ var transferCmd = &cobra.Command{
 		}
 
 		for _, xferDir := range xfrDirs {
-			if strings.Contains(xferDir.Name(), "fales") {
-				packageName := filepath.Join("test-dir", xferDir.Name())
+			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_") {
+				packageName := filepath.Join(directoryName, xferDir.Name())
 				fmt.Println(packageName)
 				transferPackage(packageName)
 			}
@@ -144,6 +144,7 @@ func transferPackage(packageName string) {
 	fmt.Println(aipDir)
 	writer.WriteString(fmt.Sprintf("%s\n", aipDir))
 	writer.Flush()
+
 }
 
 func findCompletedIngest(sipUuid string) bool {
