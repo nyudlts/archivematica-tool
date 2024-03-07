@@ -40,7 +40,7 @@ var transferCmd = &cobra.Command{
 		}
 
 		//create an output file
-		of, err := os.Create("amatica-transfers.txt")
+		of, err := os.Create("aip-file.txt")
 		if err != nil {
 			panic(err)
 		}
@@ -151,7 +151,7 @@ func transferPackage(xipPath string) error {
 
 	sipUUID := completedTransfer.SIPUUID
 
-	fmt.Println("Transfer completed, SIPUUID:", sipUUID)
+	fmt.Printf("Transfer completed, SIPUUID: %s", sipUUID)
 
 	//change this logic over to a channel
 	foundIngestCompleted := false
@@ -169,12 +169,12 @@ func transferPackage(xipPath string) error {
 		return err
 	}
 
-	aipPath = filepath.Join(aipPath, filepath.Base(xipPath))
+	aipPath = filepath.Join(aipPath, fmt.Sprintf("%s-%s", filepath.Base(xipPath), sipUUID))
 	if windows {
 		aipPath = strings.Replace(aipPath, "\\", "/", -1)
 	}
 
-	aipPath = fmt.Sprintf("%s%s", "/", aipPath)
+	aipPath = fmt.Sprintf("%s%s", "/mnt/staging/AIPsStore/", aipPath)
 
 	writer.WriteString(fmt.Sprintf("%s\n", aipPath))
 	writer.Flush()
