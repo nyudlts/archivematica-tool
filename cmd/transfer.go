@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 var (
 	directoryName string
 	writer        *bufio.Writer
+	windows       bool
 )
 
 const locationName = "amatica rws ingest point"
@@ -22,6 +24,7 @@ const locationName = "amatica rws ingest point"
 func init() {
 	transferCmd.Flags().StringVar(&config, "config", "", "")
 	transferCmd.Flags().StringVar(&directoryName, "path", "", "")
+	transferCmd.Flags().BoolVar(&windows, "windows", false, "")
 	rootCmd.AddCommand(transferCmd)
 }
 
@@ -52,34 +55,54 @@ var transferCmd = &cobra.Command{
 
 		for _, xferDir := range xfrDirs {
 			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_") {
-				packageName := filepath.Join(directoryName, xferDir.Name())
-				fmt.Println(packageName)
-				transferPackage(packageName)
+				xferPath := filepath.Join(directoryName, xferDir.Name())
+				xipPath := strings.ReplaceAll(xferPath, client.StagingLoc, "")
+
+				if err := transferPackage(xipPath); err != nil {
+					panic(err)
+				}
+
 			}
 		}
 
 	},
 }
 
-func transferPackage(packageName string) {
+func transferPackage(xipPath string) error {
+
+	//get the transfer directory location
 	location, err := client.GetLocationByName(locationName)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	startTransferResponse, err := client.StartTransfer(location.UUID, packageName)
+	//construct the filepath
+	amXIPPath := filepath.Join(location.Path, xipPath)
+	if windows {
+		//convert the path seprators if on windows
+		amXIPPath = strings.Replace(amXIPPath, "\\", "/", -1)
+	}
+
+	//request to transfer the xip
+	startTransferResponse, err := client.StartTransfer(location.UUID, amXIPPath)
 	if err != nil {
-		panic(err)
+		return err
+	}
+
+	//catch the soft error
+	if regexp.MustCompile("^Error").MatchString(startTransferResponse.Message) {
+		return fmt.Errorf("%s", startTransferResponse.Message)
 	}
 
 	fmt.Println(startTransferResponse.Message)
 
+	//get the uuid for the transfer
 	uuid, err := startTransferResponse.GetUUID()
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("transfer started: " + uuid + packageName)
+	fmt.Printf("transfer started: %v %s", uuid, filepath.Base(amXIPPath))
 
 	foundUnapproved := false
 
@@ -95,20 +118,21 @@ func transferPackage(packageName string) {
 
 	transfer, err := client.GetTransferStatus(uuid)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if err := client.ApproveTransfer(transfer.Directory, "standard"); err != nil {
-		panic(err)
+		return err
 	}
 
 	approvedTransfer, err := client.GetTransferStatus(uuid)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Println("Transfer approved:", approvedTransfer.UUID)
 
+	//change this logic over to a channel
 	foundCompleted := false
 	for !foundCompleted {
 		foundCompleted = findCompletedTransfer(uuid)
@@ -120,13 +144,14 @@ func transferPackage(packageName string) {
 
 	completedTransfer, err := client.GetTransferStatus(uuid)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	sipUUID := completedTransfer.SIPUUID
 
-	fmt.Println("Transfer completed: ", sipUUID)
+	fmt.Println("Transfer completed, SIPUUID:", sipUUID)
 
+	//change this logic over to a channel
 	foundIngestCompleted := false
 	for !foundIngestCompleted {
 		foundIngestCompleted = findCompletedIngest(sipUUID)
@@ -139,11 +164,13 @@ func transferPackage(packageName string) {
 	fmt.Println("Ingest Completed:", sipUUID)
 	aipDir, err := client.GetAIPLocation(sipUUID)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	fmt.Println(aipDir)
 	writer.WriteString(fmt.Sprintf("%s\n", aipDir))
 	writer.Flush()
+
+	return nil
 
 }
 
