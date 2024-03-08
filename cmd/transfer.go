@@ -84,8 +84,6 @@ func transferPackage(xipPath string) error {
 		amXIPPath = strings.Replace(amXIPPath, "\\", "/", -1)
 	}
 
-	fmt.Println(amXIPPath)
-
 	//request to transfer the xip
 	startTransferResponse, err := client.StartTransfer(location.UUID, amXIPPath)
 	if err != nil {
