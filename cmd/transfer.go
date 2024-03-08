@@ -17,6 +17,8 @@ var (
 	directoryName string
 	writer        *bufio.Writer
 	windows       bool
+	delayTime     int32
+	delay         time.Duration
 )
 
 const locationName = "amatica rws ingest point"
@@ -25,13 +27,14 @@ func init() {
 	transferCmd.Flags().StringVar(&config, "config", "", "")
 	transferCmd.Flags().StringVar(&directoryName, "path", "", "")
 	transferCmd.Flags().BoolVar(&windows, "windows", false, "")
+	transferCmd.Flags().Int32Var(&delayTime, "delay", 5, "")
 	rootCmd.AddCommand(transferCmd)
 }
 
 var transferCmd = &cobra.Command{
 	Use: "transfer",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		delay := time.Duration(delayTime)
 		//create a client
 		var err error
 		client, err = amatica.NewAMClient(config, 20)
@@ -79,8 +82,8 @@ func transferPackage(xipPath string) error {
 
 	//construct the filepath
 	amXIPPath := filepath.Join(location.Path, xipPath)
+	//convert the path seprators if on windows
 	if windows {
-		//convert the path seprators if on windows
 		amXIPPath = strings.Replace(amXIPPath, "\\", "/", -1)
 	}
 
@@ -111,7 +114,7 @@ func transferPackage(xipPath string) error {
 		foundUnapproved = findUnapprovedTransfer(uuid)
 		if !foundUnapproved {
 			fmt.Println("  * Waiting for approval process to complete")
-			time.Sleep(5 * time.Second)
+			time.Sleep(delay * time.Second)
 		}
 	}
 
@@ -138,7 +141,7 @@ func transferPackage(xipPath string) error {
 		foundCompleted = findCompletedTransfer(uuid)
 		if !foundCompleted {
 			fmt.Println("  * Waiting for transfer process to complete")
-			time.Sleep(5 * time.Second)
+			time.Sleep(delay * time.Second)
 		}
 	}
 
@@ -157,7 +160,7 @@ func transferPackage(xipPath string) error {
 		foundIngestCompleted = findCompletedIngest(sipUUID)
 		if !foundIngestCompleted {
 			fmt.Println("  * Waiting for ingest process to complete")
-			time.Sleep(5 * time.Second)
+			time.Sleep(delay * time.Second)
 		}
 	}
 
