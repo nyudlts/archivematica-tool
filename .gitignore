@@ -3,3 +3,4 @@ amatica-transfers.txt
 am-tool
 aip-file*
 lab/*
+*.log

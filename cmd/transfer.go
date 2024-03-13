@@ -69,7 +69,7 @@ var transferCmd = &cobra.Command{
 
 		//process the directory
 		fmt.Printf("Reading source directory: %s", directoryName)
-		log.Printf("INFO Reading source directory: %s", directoryName)
+		log.Printf("INFO reading source directory: %s", directoryName)
 
 		xfrDirs, err := os.ReadDir(directoryName)
 		if err != nil {
@@ -77,7 +77,7 @@ var transferCmd = &cobra.Command{
 		}
 
 		fmt.Printf("Transferring files from %s", directoryName)
-		log.Printf("INFO Transferring files from %s", directoryName)
+		log.Printf("INFO transferring files from %s", directoryName)
 
 		for _, xferDir := range xfrDirs {
 			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_") {
@@ -96,7 +96,7 @@ var transferCmd = &cobra.Command{
 
 func transferPackage(xipPath string) error {
 	fmt.Printf("Transfering package: %s\n", filepath.Base(xipPath))
-	log.Printf("INFO Transfering package: %s", filepath.Base(xipPath))
+	log.Printf("INFO transfering package: %s", filepath.Base(xipPath))
 	//get the transfer directory location
 	location, err := client.GetLocationByName(locationName)
 	if err != nil {
@@ -106,7 +106,7 @@ func transferPackage(xipPath string) error {
 	//construct the filepath
 	amXIPPath := filepath.Join(location.Path, xipPath)
 	fmt.Printf("Creating path of SIP: %s\n", amXIPPath)
-	log.Printf("INFO Creating path of SIP: %s", amXIPPath)
+	log.Printf("INFO creating path of SIP: %s", amXIPPath)
 
 	//convert the path seprators if on windows
 	if windows {
@@ -115,11 +115,11 @@ func transferPackage(xipPath string) error {
 		amXIPPath = strings.Replace(amXIPPath, "\\", "/", -1)
 	}
 	fmt.Printf("INFO SIP Path: %s\n", amXIPPath)
-	log.Printf("INFO SIP Path: %s", amXIPPath)
+	log.Printf("INFO SIP path: %s", amXIPPath)
 
 	//request to transfer the xip
 	fmt.Printf("Requesting Transfer for %s\n", amXIPPath)
-	log.Printf("Requesting Transfer for %s\n", amXIPPath)
+	log.Printf("INFO requesting Transfer for %s\n", amXIPPath)
 
 	startTransferResponse, err := client.StartTransfer(location.UUID, amXIPPath)
 	if err != nil {
@@ -131,8 +131,8 @@ func transferPackage(xipPath string) error {
 		return fmt.Errorf("%s", startTransferResponse.Message)
 	}
 
-	fmt.Printf("Start Transfer Request Message: %s\n", startTransferResponse.Message)
-	log.Printf("Start Transfer Request Message: %s", startTransferResponse.Message)
+	fmt.Printf("\nStart Transfer Request Message: %s\n", startTransferResponse.Message)
+	log.Printf("INFO start Transfer Request Message: %s", startTransferResponse.Message)
 
 	//get the uuid for the transfer
 	uuid, err := startTransferResponse.GetUUID()
@@ -152,7 +152,7 @@ func transferPackage(xipPath string) error {
 
 	//approve the transfer
 	fmt.Printf("Approving Transfer %s\n", uuid)
-	log.Printf("INFO Approving Transfer %s", uuid)
+	log.Printf("INFO approving Transfer %s", uuid)
 	transfer, err := client.GetTransferStatus(uuid)
 	if err != nil {
 		return err
@@ -166,9 +166,6 @@ func transferPackage(xipPath string) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("Transfer approved: %s\n", approvedTransfer.UUID)
-	log.Printf("INFO Transfer approved: %s", approvedTransfer.UUID)
 
 	fmt.Printf("transfer processing started: %s\n", filepath.Base(amXIPPath))
 	log.Printf("INFO transfer processing started: %s", filepath.Base(amXIPPath))
@@ -193,7 +190,7 @@ func transferPackage(xipPath string) error {
 		}
 
 		if !foundCompleted {
-			fmt.Println("  * Transfer Status:", ts.Status, ",  Microservice:", ts.Microservice)
+			fmt.Printf("  * Transfer Status: %s  Microservice: %s", ts.Status, ts.Microservice)
 			time.Sleep(delay * time.Second)
 		}
 	}
@@ -208,8 +205,8 @@ func transferPackage(xipPath string) error {
 	if sipUUID == "" {
 		return fmt.Errorf("no sipuuid returned")
 	}
-	fmt.Printf("Transfer completed, SIPUUID: %s\n", sipUUID)
-	log.Printf("INFO transfer completed, SIPUUID: %s", sipUUID)
+	fmt.Printf("Transfer processing completed, SIPUUID: %s\n", sipUUID)
+	log.Printf("INFO transfer processing completed, SIPUUID: %s", sipUUID)
 
 	//start Ingest
 	fmt.Printf("\nIngest processing started: %s-%s\n", filepath.Base(amXIPPath), sipUUID)
@@ -235,7 +232,7 @@ func transferPackage(xipPath string) error {
 		}
 
 		if !foundIngestCompleted {
-			fmt.Println("  * Ingest Status:", is.Status, ",  Microservice:", is.Microservice)
+			fmt.Printf("  * Ingest Status: %s  Microservice: %s", is.Status, is.Microservice)
 			time.Sleep(delay * time.Second)
 		}
 	}
