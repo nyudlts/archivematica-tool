@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -35,12 +36,22 @@ var transferCmd = &cobra.Command{
 	Use: "transfer",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		fmt.Println("Creating Log File")
+		logFile, err := os.Create("am-tools-transfer.log")
+		if err != nil {
+			panic(err)
+		}
+		defer logFile.Close()
+		log.SetOutput(logFile)
+
 		//set the poll time
+		fmt.Printf("setting polling time to %d seconds\n", delayTime)
+		log.Printf("INFO setting polling time to %d seconds", delayTime)
 		delay = time.Duration(delayTime)
-		fmt.Println("setting delay to", delayTime, "seconds")
 
 		//create a client
-		var err error
+		fmt.Println("creating go-archivematica client")
+		log.Println("INFO creating go-archivematica client")
 		client, err = amatica.NewAMClient(config, 20)
 		if err != nil {
 			panic(err)
@@ -48,6 +59,7 @@ var transferCmd = &cobra.Command{
 
 		//create an output file
 		fmt.Println("creating aip-file.txt")
+		log.Println("INFO creating aip-file.txt")
 		of, err := os.Create("aip-file.txt")
 		if err != nil {
 			panic(err)
@@ -56,29 +68,35 @@ var transferCmd = &cobra.Command{
 		writer = bufio.NewWriter(of)
 
 		//process the directory
+		fmt.Printf("Reading source directory: %s", directoryName)
+		log.Printf("INFO Reading source directory: %s", directoryName)
+
 		xfrDirs, err := os.ReadDir(directoryName)
 		if err != nil {
 			panic(err)
 		}
 
-		fmt.Println("Transferring files from", directoryName)
+		fmt.Printf("Transferring files from %s", directoryName)
+		log.Printf("INFO Transferring files from %s", directoryName)
+
 		for _, xferDir := range xfrDirs {
 			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_") {
 				xferPath := filepath.Join(directoryName, xferDir.Name())
 				xipPath := strings.ReplaceAll(xferPath, client.StagingLoc, "")
 
 				if err := transferPackage(xipPath); err != nil {
-					fmt.Println(err)
+					fmt.Printf("ERROR %s", strings.ReplaceAll(err.Error(), "\n", ""))
+					log.Printf("ERROR %s", strings.ReplaceAll(err.Error(), "\n", ""))
 				}
 
 			}
 		}
-
 	},
 }
 
 func transferPackage(xipPath string) error {
-	fmt.Println("Transfering package:", filepath.Base(xipPath))
+	fmt.Printf("Transfering package: %s\n", filepath.Base(xipPath))
+	log.Printf("INFO Transfering package: %s", filepath.Base(xipPath))
 	//get the transfer directory location
 	location, err := client.GetLocationByName(locationName)
 	if err != nil {
@@ -87,13 +105,22 @@ func transferPackage(xipPath string) error {
 
 	//construct the filepath
 	amXIPPath := filepath.Join(location.Path, xipPath)
+	fmt.Printf("Creating path of SIP: %s\n", amXIPPath)
+	log.Printf("INFO Creating path of SIP: %s", amXIPPath)
+
 	//convert the path seprators if on windows
 	if windows {
+		fmt.Println("INFO converting windows path seperators to linux")
+		log.Println("INFO converting windows path seperators to linux")
 		amXIPPath = strings.Replace(amXIPPath, "\\", "/", -1)
 	}
+	fmt.Printf("INFO SIP Path: %s\n", amXIPPath)
+	log.Printf("INFO SIP Path: %s", amXIPPath)
 
 	//request to transfer the xip
-	fmt.Println("Requesting Transfer for", amXIPPath)
+	fmt.Printf("Requesting Transfer for %s\n", amXIPPath)
+	log.Printf("Requesting Transfer for %s\n", amXIPPath)
+
 	startTransferResponse, err := client.StartTransfer(location.UUID, amXIPPath)
 	if err != nil {
 		return err
@@ -104,7 +131,8 @@ func transferPackage(xipPath string) error {
 		return fmt.Errorf("%s", startTransferResponse.Message)
 	}
 
-	fmt.Println("Start Transfer Request Message: ", startTransferResponse.Message)
+	fmt.Printf("Start Transfer Request Message: %s\n", startTransferResponse.Message)
+	log.Printf("Start Transfer Request Message: %s", startTransferResponse.Message)
 
 	//get the uuid for the transfer
 	uuid, err := startTransferResponse.GetUUID()
@@ -123,6 +151,8 @@ func transferPackage(xipPath string) error {
 	}
 
 	//approve the transfer
+	fmt.Printf("Approving Transfer %s\n", uuid)
+	log.Printf("INFO Approving Transfer %s", uuid)
 	transfer, err := client.GetTransferStatus(uuid)
 	if err != nil {
 		return err
@@ -137,9 +167,11 @@ func transferPackage(xipPath string) error {
 		return err
 	}
 
-	fmt.Println("Transfer approved:", approvedTransfer.UUID)
+	fmt.Printf("Transfer approved: %s\n", approvedTransfer.UUID)
+	log.Printf("INFO Transfer approved: %s", approvedTransfer.UUID)
 
 	fmt.Printf("transfer processing started: %s\n", filepath.Base(amXIPPath))
+	log.Printf("INFO transfer processing started: %s", filepath.Base(amXIPPath))
 	//change this logic over to a channel
 	foundCompleted := false
 	for !foundCompleted {
@@ -150,6 +182,10 @@ func transferPackage(xipPath string) error {
 
 		if ts.Status == "FAILED" {
 			return fmt.Errorf(ts.Microservice)
+		}
+
+		if ts.Status == "" {
+			return fmt.Errorf("no status being returned")
 		}
 
 		if ts.Status == "COMPLETE" {
@@ -173,8 +209,11 @@ func transferPackage(xipPath string) error {
 		return fmt.Errorf("no sipuuid returned")
 	}
 	fmt.Printf("Transfer completed, SIPUUID: %s\n", sipUUID)
+	log.Printf("INFO transfer completed, SIPUUID: %s", sipUUID)
 
+	//start Ingest
 	fmt.Printf("\nIngest processing started: %s-%s\n", filepath.Base(amXIPPath), sipUUID)
+	log.Printf("INFO ingest processing started: %s-%s\n", filepath.Base(amXIPPath), sipUUID)
 	//change this logic over to a channel
 	foundIngestCompleted := false
 	for !foundIngestCompleted {
@@ -201,7 +240,8 @@ func transferPackage(xipPath string) error {
 		}
 	}
 
-	fmt.Println("Ingest Completed:", sipUUID)
+	fmt.Printf("Ingest Completed: %s", sipUUID)
+	log.Printf("INFO ingest Completed: %s", sipUUID)
 	fmt.Println()
 
 	//write url to aip-file.txt
@@ -216,6 +256,8 @@ func transferPackage(xipPath string) error {
 	}
 
 	aipPath = fmt.Sprintf("%s%s", "/mnt/staging/AIPsStore/", aipPath)
+	log.Printf("INFO writing path to aip-file: %s", aipPath)
+	fmt.Printf("INFO writing path to aip-file: %s\n", aipPath)
 	writer.WriteString(fmt.Sprintf("%s\n", aipPath))
 	writer.Flush()
 
