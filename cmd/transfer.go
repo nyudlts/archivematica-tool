@@ -190,7 +190,7 @@ func transferPackage(xipPath string) error {
 		}
 
 		if !foundCompleted {
-			fmt.Printf("  * Transfer Status: %s  Microservice: %s", ts.Status, ts.Microservice)
+			fmt.Printf("  * Transfer Status: %s  Microservice: %s\n", ts.Status, ts.Microservice)
 			time.Sleep(delay * time.Second)
 		}
 	}
@@ -232,7 +232,7 @@ func transferPackage(xipPath string) error {
 		}
 
 		if !foundIngestCompleted {
-			fmt.Printf("  * Ingest Status: %s  Microservice: %s", is.Status, is.Microservice)
+			fmt.Printf("  * Ingest Status: %s  Microservice: %s\n", is.Status, is.Microservice)
 			time.Sleep(delay * time.Second)
 		}
 	}
