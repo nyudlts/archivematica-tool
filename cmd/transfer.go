@@ -28,7 +28,7 @@ func init() {
 	transferCmd.Flags().StringVar(&config, "config", "", "")
 	transferCmd.Flags().StringVar(&directoryName, "path", "", "")
 	transferCmd.Flags().BoolVar(&windows, "windows", false, "")
-	transferCmd.Flags().Int32Var(&delayTime, "delay", 5, "")
+	transferCmd.Flags().Int32Var(&delayTime, "poll", 5, "")
 	rootCmd.AddCommand(transferCmd)
 }
 
