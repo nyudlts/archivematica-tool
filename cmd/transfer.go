@@ -76,11 +76,11 @@ var transferCmd = &cobra.Command{
 			panic(err)
 		}
 
-		fmt.Printf("Transferring packages from %s\", directoryName)
+		fmt.Printf("Transferring packages from %s\n", directoryName)
 		log.Printf("INFO transferring fpackages from %s", directoryName)
 
 		for _, xferDir := range xfrDirs {
-			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_")  || strings.Contains(xferDir.Name(), "dlts_") {
+			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_") || strings.Contains(xferDir.Name(), "dlts_") {
 				xferPath := filepath.Join(directoryName, xferDir.Name())
 				xipPath := strings.ReplaceAll(xferPath, client.StagingLoc, "")
 
