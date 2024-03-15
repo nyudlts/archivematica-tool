@@ -68,7 +68,7 @@ var transferCmd = &cobra.Command{
 		writer = bufio.NewWriter(of)
 
 		//process the directory
-		fmt.Printf("Reading source directory: %s", directoryName)
+		fmt.Printf("Reading source directory: %s\n", directoryName)
 		log.Printf("INFO reading source directory: %s", directoryName)
 
 		xfrDirs, err := os.ReadDir(directoryName)
@@ -76,11 +76,11 @@ var transferCmd = &cobra.Command{
 			panic(err)
 		}
 
-		fmt.Printf("Transferring files from %s", directoryName)
-		log.Printf("INFO transferring files from %s", directoryName)
+		fmt.Printf("Transferring packages from %s\", directoryName)
+		log.Printf("INFO transferring fpackages from %s", directoryName)
 
 		for _, xferDir := range xfrDirs {
-			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_") {
+			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_")  || strings.Contains(xferDir.Name(), "dlts_") {
 				xferPath := filepath.Join(directoryName, xferDir.Name())
 				xipPath := strings.ReplaceAll(xferPath, client.StagingLoc, "")
 
