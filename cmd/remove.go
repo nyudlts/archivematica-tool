@@ -30,7 +30,7 @@ func init() {
 }
 
 var removeCmd = &cobra.Command{
-	Use: "remove-transferred",
+	Use: "remove",
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 		client, err = amatica.NewAMClient(config, 20)
