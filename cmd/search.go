@@ -32,13 +32,18 @@ var searchCmd = &cobra.Command{
 			panic(err)
 		}
 
-		for i, pack := range packs {
-			b, err := json.Marshal(pack)
-			if err != nil {
-				panic(err)
-			}
+		if len(packs) > 0 {
 
-			fmt.Printf("%d.  %s\n\n", i+1, string(b))
+			for i, pack := range packs {
+				b, err := json.Marshal(pack)
+				if err != nil {
+					panic(err)
+				}
+
+				fmt.Printf("%d.  %s\n\n", i+1, string(b))
+			}
+		} else {
+			fmt.Println("No matching packages found")
 		}
 	},
 }

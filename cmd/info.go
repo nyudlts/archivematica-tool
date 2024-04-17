@@ -16,7 +16,7 @@ var infoCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("am-tool v%s\n", version)
 		bi, ok := debug.ReadBuildInfo()
-		if ok != true {
+		if !ok {
 			panic(fmt.Errorf("unable to read build info"))
 		}
 		fmt.Println("\nBuild Info\n==========")
