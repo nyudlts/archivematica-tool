@@ -80,7 +80,7 @@ var transferCmd = &cobra.Command{
 		log.Printf("INFO transferring fpackages from %s", directoryName)
 
 		for _, xferDir := range xfrDirs {
-			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_") || strings.Contains(xferDir.Name(), "dlts_") {
+			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_") || strings.Contains(xferDir.Name(), "nyuarchives_") || strings.Contains(xferDir.Name(), "dlts_") {
 				xferPath := filepath.Join(directoryName, xferDir.Name())
 				xipPath := strings.ReplaceAll(xferPath, client.StagingLoc, "")
 
@@ -89,13 +89,15 @@ var transferCmd = &cobra.Command{
 					log.Printf("ERROR %s", strings.ReplaceAll(err.Error(), "\n", ""))
 				}
 
+			} else {
+				panic("Invalid directory name")
 			}
 		}
 	},
 }
 
 func transferPackage(xipPath string) error {
-	fmt.Printf("Transfering package: %s\n", filepath.Base(xipPath))
+	fmt.Printf("\nTransfering package: %s\n", filepath.Base(xipPath))
 	log.Printf("INFO transfering package: %s", filepath.Base(xipPath))
 	//get the transfer directory location
 	location, err := client.GetLocationByName(locationName)

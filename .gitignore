@@ -2,6 +2,8 @@ go-archivematica.yml
 amatica-transfers.txt
 am-tool
 am-tool.exe
+amtool
+amtool.exe
 aip-file*
 lab/*
 *.log
