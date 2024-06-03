@@ -46,12 +46,12 @@ var transferCmd = &cobra.Command{
 
 		//set the poll time
 		fmt.Printf("setting polling time to %d seconds\n", delayTime)
-		log.Printf("INFO setting polling time to %d seconds", delayTime)
+		log.Printf("[INFO] setting polling time to %d seconds", delayTime)
 		delay = time.Duration(delayTime)
 
 		//create a client
 		fmt.Println("creating go-archivematica client")
-		log.Println("INFO creating go-archivematica client")
+		log.Println("[INFO] creating go-archivematica client")
 		client, err = amatica.NewAMClient(config, 20)
 		if err != nil {
 			panic(err)
@@ -59,7 +59,7 @@ var transferCmd = &cobra.Command{
 
 		//create an output file
 		fmt.Println("creating aip-file.txt")
-		log.Println("INFO creating aip-file.txt")
+		log.Println("[INFO] creating aip-file.txt")
 		of, err := os.Create("aip-file.txt")
 		if err != nil {
 			panic(err)
@@ -69,7 +69,7 @@ var transferCmd = &cobra.Command{
 
 		//process the directory
 		fmt.Printf("Reading source directory: %s\n", directoryName)
-		log.Printf("INFO reading source directory: %s", directoryName)
+		log.Printf("[INFO] reading source directory: %s", directoryName)
 
 		xfrDirs, err := os.ReadDir(directoryName)
 		if err != nil {
@@ -77,7 +77,7 @@ var transferCmd = &cobra.Command{
 		}
 
 		fmt.Printf("Transferring packages from %s\n", directoryName)
-		log.Printf("INFO transferring fpackages from %s", directoryName)
+		log.Printf("[INFO] transferring packages from %s", directoryName)
 
 		for _, xferDir := range xfrDirs {
 			if strings.Contains(xferDir.Name(), "fales_") || strings.Contains(xferDir.Name(), "tamwag_") || strings.Contains(xferDir.Name(), "nyuarchives_") || strings.Contains(xferDir.Name(), "dlts_") {
@@ -86,7 +86,7 @@ var transferCmd = &cobra.Command{
 
 				if err := transferPackage(xipPath); err != nil {
 					fmt.Printf("ERROR %s", strings.ReplaceAll(err.Error(), "\n", ""))
-					log.Printf("ERROR %s", strings.ReplaceAll(err.Error(), "\n", ""))
+					log.Printf("[ERROR] %s", strings.ReplaceAll(err.Error(), "\n", ""))
 				}
 
 			} else {
@@ -98,7 +98,7 @@ var transferCmd = &cobra.Command{
 
 func transferPackage(xipPath string) error {
 	fmt.Printf("\nTransfering package: %s\n", filepath.Base(xipPath))
-	log.Printf("INFO transfering package: %s", filepath.Base(xipPath))
+	log.Printf("[INFO] transfering package: %s", filepath.Base(xipPath))
 	//get the transfer directory location
 	location, err := client.GetLocationByName(locationName)
 	if err != nil {
@@ -108,20 +108,20 @@ func transferPackage(xipPath string) error {
 	//construct the filepath
 	amXIPPath := filepath.Join(location.Path, xipPath)
 	fmt.Printf("Creating path of SIP: %s\n", amXIPPath)
-	log.Printf("INFO creating path of SIP: %s", amXIPPath)
+	log.Printf("[INFO] creating path of SIP: %s", amXIPPath)
 
 	//convert the path seprators if on windows
 	if windows {
 		fmt.Println("INFO converting windows path seperators to linux")
-		log.Println("INFO converting windows path seperators to linux")
+		log.Println("[INFO] converting windows path seperators to linux")
 		amXIPPath = strings.Replace(amXIPPath, "\\", "/", -1)
 	}
 	fmt.Printf("INFO SIP Path: %s\n", amXIPPath)
-	log.Printf("INFO SIP path: %s", amXIPPath)
+	log.Printf("[INFO] SIP path: %s", amXIPPath)
 
 	//request to transfer the xip
 	fmt.Printf("Requesting Transfer for %s\n", amXIPPath)
-	log.Printf("INFO requesting Transfer for %s\n", amXIPPath)
+	log.Printf("[INFO] requesting Transfer for %s\n", amXIPPath)
 
 	startTransferResponse, err := client.StartTransfer(location.UUID, amXIPPath)
 	if err != nil {
@@ -134,7 +134,7 @@ func transferPackage(xipPath string) error {
 	}
 
 	fmt.Printf("\nStart Transfer Request Message: %s\n", startTransferResponse.Message)
-	log.Printf("INFO start Transfer Request Message: %s", startTransferResponse.Message)
+	log.Printf("[INFO] start Transfer Request Message: %s", startTransferResponse.Message)
 
 	//get the uuid for the transfer
 	uuid, err := startTransferResponse.GetUUID()
@@ -154,7 +154,7 @@ func transferPackage(xipPath string) error {
 
 	//approve the transfer
 	fmt.Printf("Approving Transfer %s\n", uuid)
-	log.Printf("INFO approving Transfer %s", uuid)
+	log.Printf("[INFO] approving Transfer %s", uuid)
 	transfer, err := client.GetTransferStatus(uuid)
 	if err != nil {
 		return err
@@ -170,7 +170,7 @@ func transferPackage(xipPath string) error {
 	}
 
 	fmt.Printf("transfer processing started: %s\n", filepath.Base(amXIPPath))
-	log.Printf("INFO transfer processing started: %s", filepath.Base(amXIPPath))
+	log.Printf("[INFO] transfer processing started: %s", filepath.Base(amXIPPath))
 	//change this logic over to a channel
 	foundCompleted := false
 	for !foundCompleted {
@@ -208,11 +208,11 @@ func transferPackage(xipPath string) error {
 		return fmt.Errorf("no sipuuid returned")
 	}
 	fmt.Printf("Transfer processing completed, SIPUUID: %s\n", sipUUID)
-	log.Printf("INFO transfer processing completed, SIPUUID: %s", sipUUID)
+	log.Printf("[INFO] transfer processing completed, SIPUUID: %s", sipUUID)
 
 	//start Ingest
 	fmt.Printf("\nIngest processing started: %s-%s\n", filepath.Base(amXIPPath), sipUUID)
-	log.Printf("INFO ingest processing started: %s-%s\n", filepath.Base(amXIPPath), sipUUID)
+	log.Printf("[INFO] ingest processing started: %s-%s\n", filepath.Base(amXIPPath), sipUUID)
 	//change this logic over to a channel
 	foundIngestCompleted := false
 	for !foundIngestCompleted {
@@ -240,7 +240,7 @@ func transferPackage(xipPath string) error {
 	}
 
 	fmt.Printf("Ingest Completed: %s", sipUUID)
-	log.Printf("INFO ingest Completed: %s", sipUUID)
+	log.Printf("[INFO] ingest Completed: %s", sipUUID)
 	fmt.Println()
 
 	//write url to aip-file.txt
@@ -255,7 +255,7 @@ func transferPackage(xipPath string) error {
 	}
 
 	aipPath = fmt.Sprintf("%s%s", "/mnt/staging/AIPsStore/", aipPath)
-	log.Printf("INFO writing path to aip-file: %s", aipPath)
+	log.Printf("[INFO] writing path to aip-file: %s", aipPath)
 	fmt.Printf("INFO writing path to aip-file: %s\n", aipPath)
 	writer.WriteString(fmt.Sprintf("%s\n", aipPath))
 	writer.Flush()

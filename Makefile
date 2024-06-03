@@ -2,5 +2,5 @@ tidy:
 	go mod tidy
 
 build:
-	go build -o amtool main.go
+	go build -o build/amtool main.go
 	
