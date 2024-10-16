@@ -254,7 +254,7 @@ func transferPackage(xipPath string) error {
 		aipPath = strings.Replace(aipPath, "\\", "/", -1)
 	}
 
-	aipPath = fmt.Sprintf("%s%s", "/mnt/staging/AIPsStore/", aipPath)
+	aipPath = fmt.Sprintf("%s%s", "/mnt/amatica/AIPsStore/", aipPath)
 	log.Printf("[INFO] writing path to aip-file: %s", aipPath)
 	fmt.Printf("INFO writing path to aip-file: %s\n", aipPath)
 	writer.WriteString(fmt.Sprintf("%s\n", aipPath))
